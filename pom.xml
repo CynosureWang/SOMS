@@ -9,6 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <packaging>pom</packaging>
+    <modules>
+        <module>soms-common</module>
+        <module>soms-server</module>
+    </modules>
     <groupId>com.mfnit</groupId>
     <artifactId>SOMS</artifactId>
     <version>0.0.1-SNAPSHOT</version>
