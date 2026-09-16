@@ -17,6 +17,8 @@ public enum ResultCodeMessage {
     TOKEN_EMPTY(502,"TOKEN为空或错误"),
     SUCCESS(200,"SUCCESS"),
     FAIL(400,"FAIL"),
+    PARAM_ERROR(401,"参数错误"),
+    NOT_FOUND(404,"资源不存在"),
     ;
 
     private final int code;
