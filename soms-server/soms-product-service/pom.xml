@@ -5,29 +5,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.mfnit</groupId>
-        <artifactId>SOMS</artifactId>
+        <artifactId>soms-server</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <description>公共</description>
-    <artifactId>soms-common</artifactId>
+    <artifactId>soms-product-service</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>annotationProcessor</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-    </dependencies>
 
 </project>

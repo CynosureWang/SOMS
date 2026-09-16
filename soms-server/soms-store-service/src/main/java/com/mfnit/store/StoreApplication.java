@@ -2,6 +2,8 @@ package com.mfnit.store;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
 /**
  * @Project SOMS
  * @Author Cynosure.Wang
@@ -10,6 +12,7 @@ import org.springframework.boot.SpringApplication;
  * @Description SOMS Store Application
  * @Copyright Copyright © 2026 Zaozhuang Memorial Future Network Information Technology Co., Ltd. All rights reserved
  */
+@EnableDiscoveryClient
 @SpringBootApplication
 public class StoreApplication {
     public static void main(String[] args) {

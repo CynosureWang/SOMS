@@ -15,7 +15,7 @@ public enum ResultCodeMessage {
     SYSTEM_EXCEPTION(500,"系统异常，请联系管理员"),
     UNKNOWN_EXCEPTION(501,"未知错误，请联系开发人员"),
     TOKEN_EMPTY(502,"TOKEN为空或错误"),
-    SUCCESS(200,"SUCCESS"),
+    SUCCESS(0,"SUCCESS"),
     FAIL(400,"FAIL"),
     PARAM_ERROR(401,"参数错误"),
     NOT_FOUND(404,"资源不存在"),
