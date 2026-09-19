@@ -10,6 +10,14 @@
     </parent>
 
     <description>门店服务</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+            <version>3.5.17</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
     <artifactId>soms-store-service</artifactId>
 
     <properties>

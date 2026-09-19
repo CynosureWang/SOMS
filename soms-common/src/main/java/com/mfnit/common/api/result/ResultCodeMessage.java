@@ -18,6 +18,7 @@ public enum ResultCodeMessage {
     SUCCESS(0,"SUCCESS"),
     FAIL(400,"FAIL"),
     PARAM_ERROR(401,"参数错误"),
+    UNAUTHORIZED(403,"账号已锁定或禁用"),
     NOT_FOUND(404,"资源不存在"),
     ;
 

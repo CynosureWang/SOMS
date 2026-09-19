@@ -1,0 +1,87 @@
+server:
+  port: 80
+
+spring:
+  application:
+    name: service-gateway
+  profiles:
+    active: dev
+  main:
+    web-application-type: reactive
+  config:
+    import:
+      - optional:nacos:soms-common.yml
+      - optional:nacos:soms-redis.yml
+      - optional:nacos:service-gateway.yml
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url:
+#    username:
+#    password:
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        namespace: soms
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: soms
+        file-extension: yml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: soms-common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: soms-redis.yml
+            group: DEFAULT_GROUP
+            refresh: true
+        extension-configs:
+          - data-id: service-gateway.yml
+            group: DEFAULT_GROUP
+            refresh: true
+    gateway:
+      server:
+        webflux:
+          discovery:
+            locator:
+              enabled: false
+          routes:
+            - id: auth
+              uri: lb://service-auth
+              predicates:
+                - Path=/api/v1/auth/**
+            - id: admin
+              uri: lb://service-admin
+              predicates:
+                - Path=/api/v1/admin/**
+            - id: customer
+              uri: lb://service-customer
+              predicates:
+                - Path=/api/v1/customer/**
+            - id: store
+              uri: lb://service-store
+              predicates:
+                - Path=/api/v1/store/**
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+
+# 本地兜底
+#jwt:
+#  secret:
+#  issuer: soms
+#
+#gateway:
+#  sign:
+#    secret:
+
+auth:
+  whitelist:
+    - /api/v1/auth/login
+    - /api/v1/auth/refresh
+    - /api/v1/auth/sms/send
+    - /api/v1/customer/auth/**
+    - /actuator/**
+    - /favicon.ico

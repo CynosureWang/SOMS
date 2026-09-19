@@ -1,9 +1,61 @@
+server:
+  port: 8000
+
 spring:
   application:
     name: service-admin
+  profiles:
+    active: dev
+  config:
+    import:
+      - optional:nacos:soms-common.yml
+      - optional:nacos:soms-redis.yml
+      - optional:nacos:service-admin.yml
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-server:
-  port: 8000
+        namespace: soms
+      config:
+        server-addr: 127.0.0.1:8848
+        namespace: soms
+        file-extension: yml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: soms-common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: soms-redis.yml
+            group: DEFAULT_GROUP
+            refresh: true
+        extension-configs:
+          - data-id: service-admin.yml
+            group: DEFAULT_GROUP
+            refresh: true
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 5000ms
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url:
+#    username:
+#    password:
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+#gateway:
+#  sign:
+#    secret:

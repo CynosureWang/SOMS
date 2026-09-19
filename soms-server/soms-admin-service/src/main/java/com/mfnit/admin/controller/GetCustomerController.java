@@ -6,6 +6,7 @@ import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.api.result.ResultGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,14 +32,14 @@ public class GetCustomerController {
      * 分页查询客户列表
      */
     @GetMapping("/customer/list")
+    @PreAuthorize("hasAuthority('customer:list')")
     public Result<PageResult<CustomerDTO>> list(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String customerName,
             @RequestParam(required = false) String mobile) {
 
-        PageResult<CustomerDTO> page =
-                getCustomerService.getCustomers(pageNum, pageSize, customerName, mobile);
+        PageResult<CustomerDTO> page = getCustomerService.getCustomers(pageNum, pageSize, customerName, mobile);
 
         return ResultGenerator.genSuccessResult(page);
     }
