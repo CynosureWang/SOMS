@@ -62,6 +62,10 @@ spring:
               uri: lb://service-store
               predicates:
                 - Path=/api/v1/store/**
+            - id: product
+              uri: lb://service-product
+              predicates:
+                - Path=/api/v1/product/**
   data:
     redis:
       host: 127.0.0.1
