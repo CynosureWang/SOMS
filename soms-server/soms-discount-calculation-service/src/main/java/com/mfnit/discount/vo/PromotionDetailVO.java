@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * @Author Cynosure.Wang
  * @Version 1.0.0
  * @CreateTime 2026/10/4 16:41
- * @Description SOMS - Discount Calculation Service 折扣计算服务VO
+ * @Description TODO
  * @Copyright Copyright © 2026 Zaozhuang Memorial Future Network Information Technology Co., Ltd. All rights reserved
  */
 @Data
