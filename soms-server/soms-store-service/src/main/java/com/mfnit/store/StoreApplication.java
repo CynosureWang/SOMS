@@ -1,8 +1,11 @@
 package com.mfnit.store;
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
  * @Project SOMS
@@ -12,8 +15,11 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * @Description SOMS Store Application
  * @Copyright Copyright © 2026 Zaozhuang Memorial Future Network Information Technology Co., Ltd. All rights reserved
  */
+@EnableMethodSecurity(prePostEnabled = true)
+@EnableFeignClients(basePackages = "com.mfnit.store.client")
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = {"com.mfnit"})
+@MapperScan("com.mfnit.store.mapper")
+@SpringBootApplication(scanBasePackages = {"com.mfnit.store", "com.mfnit.common"})
 public class StoreApplication {
     public static void main(String[] args) {
         SpringApplication.run(StoreApplication.class, args);

@@ -4,7 +4,7 @@
 > **服务端口**：`8090`
 > **基础路径**：`http://127.0.0.1:8090`
 > **网关路径**：`http://localhost/api/v1/product`
-> **版本**：`1.0.0`
+> **版本**：`1.1.1`
 > **首次版本日期**：2026-10-03
 
 ---
@@ -444,6 +444,7 @@ Authorization: Bearer {accessToken}
     "unit": "瓶",
     "mainImage": null,
     "categoryId": 100,
+    "brandId": null,
     "price": 3.50,
     "stockMode": 1,
     "isWeight": 0,

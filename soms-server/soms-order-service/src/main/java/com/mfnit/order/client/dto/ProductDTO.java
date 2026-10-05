@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @Data
 public class ProductDTO {
     private Long productId;
+    private Long brandId;
     private String productCode;
     private String productName;
     private String specText;
