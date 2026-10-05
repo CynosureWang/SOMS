@@ -38,17 +38,23 @@ public class Store implements Serializable {
     private String shortName;
     private Integer storeType;
     private Integer businessStatus;
+
     private Long regionId;
+    private Long cityId;
+    private Long areaId;
     private Long parentStoreId;
+
     private String address;
     private BigDecimal longitude;
     private BigDecimal latitude;
     private BigDecimal areaSize;
+
     private LocalDate openDate;
     private LocalDate closeDate;
     private Long managerId;
     private String managerPhone;
     private String servicePhone;
+
     private String remark;
 
     @TableField(fill = FieldFill.INSERT)

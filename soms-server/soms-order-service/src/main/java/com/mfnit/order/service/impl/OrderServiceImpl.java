@@ -6,13 +6,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.core.exception.BusinessException;
+import com.mfnit.order.client.DiscountFeignClient;
 import com.mfnit.order.client.ProductFeignClient;
 import com.mfnit.order.client.StockFeignClient;
-import com.mfnit.order.client.dto.ProductDTO;
-import com.mfnit.order.client.dto.StockDeductDTO;
-import com.mfnit.order.client.dto.StockItem;
-import com.mfnit.order.client.dto.StockLockDTO;
-import com.mfnit.order.client.dto.StockReleaseDTO;
+import com.mfnit.order.client.StoreFeignClient;
+import com.mfnit.order.client.dto.*;
 import com.mfnit.order.constant.OrderStatus;
 import com.mfnit.order.constant.OrderType;
 import com.mfnit.order.constant.PayStatus;
@@ -43,7 +41,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Project SOMS
@@ -67,15 +67,24 @@ public class OrderServiceImpl implements OrderService {
     private final OrderNoGenerator orderNoGenerator;
     private final ProductFeignClient productFeignClient;
     private final StockFeignClient stockFeignClient;
+    private final DiscountFeignClient discountFeignClient;
+    private final StoreFeignClient storeFeignClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public OrderDetailVO createOrder(OrderCreateDTO dto) {
-        // 1. 查商品，构建明细（不变）
-        List<OrderItem> items = new ArrayList<>();
-        List<StockItem> stockItems = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        int itemCount = 0;
+        // 0. 校验门店
+        Result<StoreDTO> storeResult = storeFeignClient.getStore(dto.getStoreId());
+        if (storeResult.getCode() != 0 || storeResult.getData() == null) {
+            throw new BusinessException("门店不存在");
+        }
+        StoreDTO store = storeResult.getData();
+        if (store.getBusinessStatus() != 2) {
+            throw new BusinessException("门店未营业，无法下单");
+        }
+        // 1. 查商品，构建 discount 请求
+        List<CartItemDTO> cartItems = new ArrayList<>();
+        Map<Long, ProductDTO> productMap = new HashMap<>();
 
         for (OrderItemDTO itemDTO : dto.getItems()) {
             Result<ProductDTO> result = productFeignClient.getProduct(itemDTO.getProductId());
@@ -87,53 +96,50 @@ public class OrderServiceImpl implements OrderService {
                 throw new BusinessException("商品已下架：" + product.getProductName());
             }
 
-            BigDecimal qty = itemDTO.getQuantity();
-            BigDecimal subtotal = product.getPrice().multiply(qty)
-                    .setScale(2, RoundingMode.HALF_UP);
+            CartItemDTO ci = new CartItemDTO();
+            ci.setProductName(product.getProductName());
+            ci.setProductId(product.getProductId());
+            ci.setBarcode(itemDTO.getBarcode());
+            ci.setBarcodeType(itemDTO.getBarcodeType());
+            ci.setCategoryId(product.getCategoryId());
+            ci.setBrandId(product.getBrandId());
+            ci.setQuantity(itemDTO.getQuantity());
+            ci.setPrice(product.getPrice());
+            cartItems.add(ci);
 
-            // 构建订单明细
-            OrderItem item = new OrderItem()
-                    .setProductId(product.getProductId())
-                    .setBarcode(itemDTO.getBarcode())
-                    .setScaleLabelId(itemDTO.getScaleLabelId())
-                    .setProductName(product.getProductName())
-                    .setSpecText(product.getSpecText())
-                    .setUnit(product.getUnit())
-                    .setMainImage(product.getMainImage())
-                    .setCategoryId(product.getCategoryId())
-                    .setIsWeight(product.getIsWeight())
-                    .setPrice(product.getPrice())
-                    .setQuantity(qty)
-                    .setTotalAmount(subtotal)
-                    .setDiscountAmount(BigDecimal.ZERO)
-                    .setPayAmount(subtotal)
-                    .setRefundQuantity(BigDecimal.ZERO)
-                    .setRefundAmount(BigDecimal.ZERO);
-            items.add(item);
-
-            // 构建库存项
-            StockItem si = new StockItem();
-            si.setProductId(product.getProductId());
-            si.setProductName(product.getProductName());
-            si.setQuantity(qty);
-            stockItems.add(si);   // ← 关键，之前漏了
-
-            totalAmount = totalAmount.add(subtotal);
-            itemCount += qty.intValue();
+            productMap.put(product.getProductId(), product);
         }
 
-        // 2. 预生成订单ID和订单号
+        // 2. 调 discount 算优惠
+        DiscountContextDTO discountCtx = new DiscountContextDTO();
+        discountCtx.setStoreId(dto.getStoreId());
+        discountCtx.setCustomerId(dto.getCustomerId());
+        discountCtx.setItems(cartItems);
+        discountCtx.setCouponIds(dto.getCouponIds());
+
+        Result<DiscountResultDTO> discountResult = discountFeignClient.calculate(discountCtx);
+        if (discountResult.getCode() != 0 || discountResult.getData() == null) {
+            throw new BusinessException("计算优惠失败：" + discountResult.getMessage());
+        }
+        DiscountResultDTO discount = discountResult.getData();
+
+        // 3. 预生成订单ID和订单号
         Long orderId = IdWorker.getId();
         String orderNo = orderNoGenerator.generate(dto.getStoreId());
 
-        log.info("准备锁定库存：storeId={}, orderId={}, orderNo={}, items={}",
-                dto.getStoreId(), orderId, orderNo, stockItems);
+        // 4. 锁库存
+        List<StockItem> stockItems = discount.getItems().stream().map(item -> {
+            StockItem si = new StockItem();
+            si.setProductId(item.getProductId());
+            si.setProductName(item.getProductName());
+            si.setQuantity(item.getQuantity());
+            return si;
+        }).toList();
 
-        // 3. 调 stock 锁库存（用预生成的 orderId）
         StockLockDTO lockDTO = new StockLockDTO();
         lockDTO.setStoreId(dto.getStoreId());
         lockDTO.setItems(stockItems);
-        lockDTO.setOrderId(orderId);       // ← 关键，传预生成的 ID
+        lockDTO.setOrderId(orderId);
         lockDTO.setOrderNo(orderNo);
 
         Result<Void> lockResult = stockFeignClient.lock(lockDTO);
@@ -141,44 +147,110 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException("锁定库存失败：" + lockResult.getMessage());
         }
 
-        // 4. 保存订单（用同一个 orderId）
+        // 5. 锁定券（如果有）
+        boolean couponLocked = false;
+        Long lockedCouponId = null;
+        if (dto.getCouponIds() != null && !dto.getCouponIds().isEmpty()) {
+            lockedCouponId = dto.getCouponIds().get(0);
+            try {
+                Result<Void> couponResult = discountFeignClient.lockCoupon(
+                        lockedCouponId, orderId, orderNo);
+                if (couponResult.getCode() != 0) {
+                    throw new BusinessException("锁定券失败：" + couponResult.getMessage());
+                }
+                couponLocked = true;
+            } catch (Exception e) {
+                // 锁券失败，释放库存
+                try {
+                    StockReleaseDTO releaseDTO = new StockReleaseDTO();
+                    releaseDTO.setStoreId(dto.getStoreId());
+                    releaseDTO.setItems(stockItems);
+                    releaseDTO.setOrderId(orderId);
+                    releaseDTO.setOrderNo(orderNo);
+                    stockFeignClient.release(releaseDTO);
+                } catch (Exception ex) {
+                    log.error("释放库存也失败：{}", orderNo, ex);
+                }
+                throw e;
+            }
+        }
+
+        // 6. 保存订单
         try {
+            int totalQty = discount.getItems().stream()
+                    .mapToInt(i -> i.getQuantity().intValue())
+                    .sum();
             Order order = new Order()
-                    .setOrderId(orderId)        // ← 显式设置
+                    .setOrderId(orderId)
                     .setOrderNo(orderNo)
                     .setStoreId(dto.getStoreId())
                     .setCustomerId(dto.getCustomerId())
+                    .setCouponId(lockedCouponId)
                     .setOrderType(dto.getOrderType())
-                    .setTotalAmount(totalAmount)
-                    .setDiscountAmount(BigDecimal.ZERO)
-                    .setPayAmount(totalAmount)
+                    .setTotalAmount(discount.getOriginalAmount())
+                    .setDiscountAmount(discount.getDiscountAmount())
+                    .setPayAmount(discount.getPayAmount())
+                    .setItemCount(totalQty)
                     .setPaidAmount(BigDecimal.ZERO)
-                    .setItemCount(itemCount)
                     .setStatus(OrderStatus.PENDING_PAY.getCode())
                     .setPayStatus(PayStatus.UNPAID.getCode())
                     .setRemark(dto.getRemark());
             orderMapper.insert(order);
 
-            for (OrderItem item : items) {
-                item.setOrderId(orderId).setOrderNo(orderNo);
-                orderItemMapper.insert(item);
+            // 保存明细，用 discount 的 price、discountAmount、payAmount
+            for (ItemDiscountDTO di : discount.getItems()) {
+                ProductDTO product = productMap.get(di.getProductId());
+                if (product == null) {
+                    throw new BusinessException("商品信息丢失：" + di.getProductId());
+                }
+                OrderItem oi = new OrderItem()
+                        .setOrderId(orderId)
+                        .setOrderNo(orderNo)
+                        .setProductId(di.getProductId())
+                        .setBarcode(di.getBarcode())
+                        .setProductName(product.getProductName())
+                        .setSpecText(product.getSpecText())
+                        .setUnit(product.getUnit())
+                        .setMainImage(product.getMainImage())
+                        .setCategoryId(product.getCategoryId())
+                        .setIsWeight(product.getIsWeight())
+                        .setPrice(di.getPrice())
+                        .setQuantity(di.getQuantity())
+                        .setTotalAmount(di.getTotalAmount())
+                        .setDiscountAmount(di.getDiscountAmount())
+                        .setPayAmount(di.getPayAmount())
+                        .setPromotionId(di.getPromotionId())
+                        .setPromotionName(di.getPromotionName())
+                        .setRefundQuantity(BigDecimal.ZERO)
+                        .setRefundAmount(BigDecimal.ZERO);
+                orderItemMapper.insert(oi);
             }
 
             writeStatusLog(orderId, orderNo, null,
                     OrderStatus.PENDING_PAY.getCode(), null, 2, "创建订单");
 
-            return buildDetail(order, items);
+            return buildDetail(order, orderItemMapper.selectList(
+                    new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, orderId)));
         } catch (Exception e) {
             log.error("保存订单失败，释放库存：{}", orderNo, e);
+            // 释放库存
             try {
                 StockReleaseDTO releaseDTO = new StockReleaseDTO();
                 releaseDTO.setStoreId(dto.getStoreId());
                 releaseDTO.setItems(stockItems);
-                releaseDTO.setOrderId(orderId);   // ← 传进去
+                releaseDTO.setOrderId(orderId);
                 releaseDTO.setOrderNo(orderNo);
                 stockFeignClient.release(releaseDTO);
             } catch (Exception ex) {
-                log.error("释放库存也失败：{}", orderNo, ex);
+                log.error("释放库存失败：{}", orderNo, ex);
+            }
+            // 释放券
+            if (couponLocked) {
+                try {
+                    discountFeignClient.releaseCoupon(lockedCouponId);
+                } catch (Exception ex) {
+                    log.error("释放券失败：{}", orderNo, ex);
+                }
             }
             throw e;
         }
@@ -251,8 +323,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(rollbackFor = Exception.class)
     public void paySuccess(OrderPaySuccessDTO dto) {
         Order order = orderMapper.selectOne(
-                new LambdaQueryWrapper<Order>()
-                        .eq(Order::getOrderNo, dto.getOrderNo()));
+                new LambdaQueryWrapper<Order>().eq(Order::getOrderNo, dto.getOrderNo()));
         if (order == null) {
             throw new BusinessException("订单不存在");
         }
@@ -262,8 +333,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 1. 扣库存
         List<OrderItem> items = orderItemMapper.selectList(
-                new LambdaQueryWrapper<OrderItem>()
-                        .eq(OrderItem::getOrderId, order.getOrderId()));
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getOrderId()));
         List<StockItem> stockItems = items.stream().map(i -> {
             StockItem si = new StockItem();
             si.setProductId(i.getProductId());
@@ -277,13 +347,24 @@ public class OrderServiceImpl implements OrderService {
         deductDTO.setItems(stockItems);
         deductDTO.setOrderId(order.getOrderId());
         deductDTO.setOrderNo(order.getOrderNo());
-
         Result<Void> deductResult = stockFeignClient.deduct(deductDTO);
         if (deductResult.getCode() != 0) {
             throw new BusinessException("扣减库存失败：" + deductResult.getMessage());
         }
 
-        // 2. 更新订单
+        // 2. 核销券（如果有使用券）
+        // 从订单详情里读 couponId 需要存在 order 表，或另存一张关联表
+        // 简化方案：order 表加 coupon_id 字段
+        if (order.getCouponId() != null) {
+            try {
+                discountFeignClient.useCoupon(order.getCouponId());
+            } catch (Exception e) {
+                log.error("核销券失败：orderNo={}, couponId={}",
+                        order.getOrderNo(), order.getCouponId(), e);
+            }
+        }
+
+        // 3. 更新订单
         Integer fromStatus = order.getStatus();
         order.setStatus(OrderStatus.PAID.getCode())
                 .setPayStatus(PayStatus.PAID.getCode())
@@ -295,7 +376,6 @@ public class OrderServiceImpl implements OrderService {
         writeStatusLog(order.getOrderId(), order.getOrderNo(), fromStatus,
                 OrderStatus.PAID.getCode(), null, 2, "支付成功");
 
-        // 3. POS 即时完成
         if (order.getOrderType() == OrderType.POS.getCode()
                 || order.getOrderType() == OrderType.SELF_CHECKOUT.getCode()) {
             finishOrderInternal(order);
@@ -340,8 +420,7 @@ public class OrderServiceImpl implements OrderService {
     private void doCancel(Order order, String reason, Long operatorId) {
         // 释放库存
         List<OrderItem> items = orderItemMapper.selectList(
-                new LambdaQueryWrapper<OrderItem>()
-                        .eq(OrderItem::getOrderId, order.getOrderId()));
+                new LambdaQueryWrapper<OrderItem>().eq(OrderItem::getOrderId, order.getOrderId()));
         List<StockItem> stockItems = items.stream().map(i -> {
             StockItem si = new StockItem();
             si.setProductId(i.getProductId());
@@ -355,10 +434,19 @@ public class OrderServiceImpl implements OrderService {
         releaseDTO.setItems(stockItems);
         releaseDTO.setOrderId(order.getOrderId());
         releaseDTO.setOrderNo(order.getOrderNo());
-
         Result<Void> releaseResult = stockFeignClient.release(releaseDTO);
         if (releaseResult.getCode() != 0) {
             throw new BusinessException("释放库存失败：" + releaseResult.getMessage());
+        }
+
+        // 释放券
+        if (order.getCouponId() != null) {
+            try {
+                discountFeignClient.releaseCoupon(order.getCouponId());
+            } catch (Exception e) {
+                log.error("释放券失败：orderNo={}, couponId={}",
+                        order.getOrderNo(), order.getCouponId(), e);
+            }
         }
 
         Integer fromStatus = order.getStatus();
@@ -368,7 +456,8 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.updateById(order);
 
         writeStatusLog(order.getOrderId(), order.getOrderNo(), fromStatus,
-                OrderStatus.CANCELLED.getCode(), operatorId, operatorId == null ? 2 : 3, reason);
+                OrderStatus.CANCELLED.getCode(), operatorId,
+                operatorId == null ? 2 : 3, reason);
     }
 
     private void finishOrderInternal(Order order) {

@@ -2,6 +2,7 @@ package com.mfnit.admin;
 
 import com.mfnit.common.api.client.CustomerFeignClient;
 import com.mfnit.common.config.JwtProperties;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.SpringApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -19,7 +20,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableMethodSecurity(prePostEnabled = true)
 @EnableFeignClients(basePackageClasses = {CustomerFeignClient.class})
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = {"com.mfnit"})
+@MapperScan("com.mfnit.admin.mapper")
+@SpringBootApplication(scanBasePackages = {"com.mfnit.admin", "com.mfnit.common"})
 public class AdminApplication {
     public static void main(String[] args) {
         SpringApplication.run(AdminApplication.class, args);
