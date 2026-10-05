@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Validated
 @RestController
-@RequestMapping("/customer")
+@RequestMapping("/api/v1/customer")
 public class CustomerController {
 
     @Autowired

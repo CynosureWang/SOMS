@@ -7,6 +7,7 @@ import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.api.result.ResultCodeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,9 +29,7 @@ public class GetCustomerServiceImpl implements GetCustomerService {
     @Override
     public PageResult<CustomerDTO> getCustomers(Integer pageNum, Integer pageSize,
                                                 String customerName, String mobile) {
-        Result<PageResult<CustomerDTO>> result =
-                customerFeignClient.getAllCustomers(pageNum, pageSize, customerName, mobile);
-
+        Result<PageResult<CustomerDTO>> result = customerFeignClient.getAllCustomers(pageNum, pageSize, customerName, mobile);
         if (result.getCode() != ResultCodeMessage.SUCCESS.getCode()) {
             throw new RuntimeException("查询客户失败：" + result.getMessage());
         }
