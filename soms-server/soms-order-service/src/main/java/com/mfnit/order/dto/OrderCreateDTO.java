@@ -24,4 +24,6 @@ public class OrderCreateDTO {
     @NotEmpty(message = "商品列表不能为空")
     private List<OrderItemDTO> items;
     private String remark;
+    /** 使用的券ID列表，暂只支持一张 */
+    private List<Long> couponIds;
 }

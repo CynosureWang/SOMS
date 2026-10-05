@@ -3,7 +3,7 @@
 > **服务名称**：`service-admin`
 > **服务端口**：`8000`
 > **基础路径**：`http://127.0.0.1:8000`
-> **版本**：`1.0.0`
+> **版本**：`1.1.0`
 > **首次版本日期**：2026-09-18
 > **更新日期**：2026-09-20
 
@@ -616,64 +616,216 @@ GET /api/v1/admin/role/list?pageNum=1&pageSize=10&userType=3
 
 ### 10.1 系统管理
 
-| 权限编码                    | 权限名称     |
-|-----------------------------|--------------|
-| `system:admin:list`         | 管理员列表   |
-| `system:admin:add`          | 新增管理员   |
-| `system:admin:edit`         | 修改管理员   |
-| `system:admin:delete`       | 删除管理员   |
-| `system:employee:list`      | 员工列表     |
-| `system:employee:add`       | 新增员工     |
-| `system:employee:edit`      | 修改员工     |
-| `system:employee:delete`    | 删除员工     |
-| `system:role:list`          | 角色列表     |
-| `system:role:add`           | 新增角色     |
-| `system:role:edit`          | 修改角色     |
-| `system:role:delete`        | 删除角色     |
-| `system:role:assign`        | 分配权限     |
-| `system:permission:list`    | 权限列表     |
+| 权限编码                 | 权限名称   |
+| ------------------------ | ---------- |
+| `system:admin:list`      | 管理员列表 |
+| `system:admin:add`       | 新增管理员 |
+| `system:admin:edit`      | 修改管理员 |
+| `system:admin:delete`    | 删除管理员 |
+| `system:employee:list`   | 员工列表   |
+| `system:employee:add`    | 新增员工   |
+| `system:employee:edit`   | 修改员工   |
+| `system:employee:delete` | 删除员工   |
+| `system:role:list`       | 角色列表   |
+| `system:role:add`        | 新增角色   |
+| `system:role:edit`       | 修改角色   |
+| `system:role:delete`     | 删除角色   |
+| `system:role:assign`     | 分配权限   |
+| `system:permission:list` | 权限列表   |
 
 ### 10.2 门店管理
 
+| 权限编码            | 权限名称 |
+| ------------------- | -------- |
+| `store:list`        | 门店列表 |
+| `store:detail`      | 门店详情 |
+| `store:add`         | 新增门店 |
+| `store:edit`        | 修改门店 |
+| `store:delete`      | 删除门店 |
+| `store:region:list` | 区域列表 |
+| `store:region:add`  | 新增区域 |
+| `store:region:edit` | 修改区域 |
+
+### 10.3 商品管理
+
+| 权限编码                  | 权限名称 |
+| ------------------------- | -------- |
+| `product:list`            | 商品列表 |
+| `product:detail`          | 商品详情 |
+| `product:add`             | 新增商品 |
+| `product:edit`            | 修改商品 |
+| `product:delete`          | 删除商品 |
+| `product:category:list`   | 分类列表 |
+| `product:category:add`    | 新增分类 |
+| `product:category:edit`   | 修改分类 |
+| `product:category:delete` | 删除分类 |
+| `product:brand:list`      | 品牌列表 |
+| `product:brand:add`       | 新增品牌 |
+| `product:brand:edit`      | 修改品牌 |
+| `product:brand:delete`    | 删除品牌 |
+
+### 10.4 库存管理
+| 权限编码       | 权限名称 |
+| -------------- | -------- |
+| `stock:list`   | 库存查询 |
+| `stock:in`     | 入库     |
+| `stock:out`    | 出库     |
+| `stock:adjust` | 库存调整 |
+
+### 10.5 订单管理
+| 权限编码       | 权限名称 |
+| -------------- | -------- |
+| `order:list`   | 订单列表 |
+| `order:detail` | 订单详情 |
+| `order:add`    | 创建订单 |
+| `order:cancel` | 取消订单 |
+| `order:edit`   | 修改订单 |
+| `order:refund` | 订单退款 |
+
+### 10.6 会员管理
+| 权限编码          | 权限名称 |
+| ----------------- | -------- |
+| `customer:list`   | 会员列表 |
+| `customer:detail` | 会员详情 |
+| `customer:edit`   | 修改会员 |
+
+### 10.7 营销管理
 | 权限编码                    | 权限名称     |
-|-----------------------------|--------------|
-| `store:list`                | 门店列表     |
-| `store:add`                 | 新增门店     |
-| `store:edit`                | 修改门店     |
-| `store:delete`              | 删除门店     |
-| `store:region:list`         | 区域列表     |
-| `store:region:add`          | 新增区域     |
-| `store:region:edit`         | 修改区域     |
-| `store:region:delete`       | 删除区域     |
+| --------------------------- | ------------ |
+| `discount:promotion:list`   | 促销列表     |
+| `discount:promotion:add`    | 新增促销     |
+| `discount:promotion:edit`   | 修改促销     |
+| `discount:promotion:delete` | 删除促销     |
+| `discount:coupon:list`      | 券列表       |
+| `discount:coupon:add`       | 新增券       |
+| `discount:coupon:edit`      | 修改券       |
+| `discount:coupon:delete`    | 删除券       |
+| `discount:coupon:issue`     | 发券         |
+| `discount:coupon:revoke`    | 回收券       |
+| `discount:rule:list`        | 折扣规则列表 |
+| `discount:rule:add`         | 新增折扣规则 |
+| `discount:rule:edit`        | 修改折扣规则 |
+| `discount:rule:delete`      | 删除折扣规则 |
 
-### 10.3 商品 / 库存 / 订单 / 会员
+### 10.8 支付管理
+| 权限编码     | 权限名称 |
+| ------------ | -------- |
+| `pay:list`   | 支付记录 |
+| `pay:create` | 发起支付 |
+| `pay:close`  | 关闭支付 |
+| `pay:refund` | 退款管理 |
 
-| 权限编码                    | 权限名称       |
-|-----------------------------|----------------|
-| `product:list`              | 商品列表       |
-| `product:add`               | 新增商品       |
-| `product:edit`              | 修改商品       |
-| `product:delete`            | 删除商品       |
-| `stock:list`                | 库存查询       |
-| `stock:in`                  | 入库           |
-| `stock:out`                 | 出库           |
-| `stock:adjust`              | 库存调整       |
-| `order:list`                | 订单列表       |
-| `order:detail`              | 订单详情       |
-| `order:cancel`              | 订单取消       |
-| `order:refund`              | 订单退款       |
-| `customer:list`             | 会员列表       |
-| `customer:detail`           | 会员详情       |
-| `customer:edit`             | 修改会员       |
-| `promotion:list`            | 促销活动列表   |
-| `promotion:add`             | 新增促销       |
-| `pay:list`                  | 支付记录       |
-| `pay:refund`                | 退款管理       |
-| `finance:reconciliation`    | 对账           |
-| `finance:report`            | 财务报表       |
-| `report:sales`              | 销售报表       |
-| `report:stock`              | 库存报表       |
-| `report:member`             | 会员报表       |
+### 10.9 财务管理
+| 权限编码                 | 权限名称 |
+| ------------------------ | -------- |
+| `finance:reconciliation` | 对账     |
+| `finance:report`         | 财务报表 |
+
+### 10.10 报表统计
+| 权限编码        | 权限名称 |
+| --------------- | -------- |
+| `report:sales`  | 销售报表 |
+| `report:stock`  | 库存报表 |
+| `report:member` | 会员报表 |
+
+### 10.11 一级菜单与权限对应
+| 菜单     | permission_id | permission_code          |
+| -------- | ------------- | ------------------------ |
+| 系统管理 | 1             | `system`                 |
+| 门店管理 | 2             | `store`                  |
+| 商品管理 | 3             | `product`                |
+| 库存管理 | 4             | `stock`                  |
+| 订单管理 | 5             | `order`                  |
+| 会员管理 | 6             | `customer`               |
+| 营销管理 | 7             | `discount` / `promotion` |
+| 支付管理 | 8             | `pay`                    |
+| 财务管理 | 9             | `finance`                |
+| 报表统计 | 10            | `report`                 |
+
+## 10.12 权限初始化 SQL 参考
+
+**新增模块权限时，用 `ON DUPLICATE KEY UPDATE` 保证幂等：**
+
+```
+-- 门店模块
+INSERT INTO sys_permission 
+(permission_id, permission_code, permission_name, permission_type, parent_id, sort, status, is_deleted) 
+VALUES
+(2001, 'store:list',              '门店列表', 2, 2, 1, 1, 0),
+(2002, 'store:detail',            '门店详情', 2, 2, 2, 1, 0),
+(2003, 'store:add',               '新增门店', 2, 2, 3, 1, 0),
+(2004, 'store:edit',              '修改门店', 2, 2, 4, 1, 0),
+(2005, 'store:delete',            '删除门店', 2, 2, 5, 1, 0),
+(2006, 'store:region:list',       '区域列表', 2, 2, 6, 1, 0),
+(2007, 'store:region:add',        '新增区域', 2, 2, 7, 1, 0),
+(2008, 'store:region:edit',       '修改区域', 2, 2, 8, 1, 0),
+(2009, 'store:region:delete',     '删除区域', 2, 2, 9, 1, 0)
+ON DUPLICATE KEY UPDATE
+    permission_name = VALUES(permission_name),
+    parent_id = VALUES(parent_id),
+    sort = VALUES(sort);
+
+-- 支付模块
+INSERT INTO sys_permission 
+(permission_id, permission_code, permission_name, permission_type, parent_id, sort, status, is_deleted) 
+VALUES
+(2101, 'pay:list',    '支付记录', 2, 8, 1, 1, 0),
+(2102, 'pay:create',  '发起支付', 2, 8, 2, 1, 0),
+(2103, 'pay:close',   '关闭支付', 2, 8, 3, 1, 0),
+(2104, 'pay:refund',  '退款管理', 2, 8, 4, 1, 0)
+ON DUPLICATE KEY UPDATE
+    permission_name = VALUES(permission_name),
+    parent_id = VALUES(parent_id),
+    sort = VALUES(sort);
+
+-- 营销模块
+INSERT INTO sys_permission 
+(permission_id, permission_code, permission_name, permission_type, parent_id, sort, status, is_deleted) 
+VALUES
+(2201, 'discount:promotion:list',    '促销列表',     2, 7, 1,  1, 0),
+(2202, 'discount:promotion:add',     '新增促销',     2, 7, 2,  1, 0),
+(2203, 'discount:promotion:edit',    '修改促销',     2, 7, 3,  1, 0),
+(2204, 'discount:promotion:delete',  '删除促销',     2, 7, 4,  1, 0),
+(2205, 'discount:coupon:list',       '券列表',       2, 7, 5,  1, 0),
+(2206, 'discount:coupon:add',        '新增券',       2, 7, 6,  1, 0),
+(2207, 'discount:coupon:edit',       '修改券',       2, 7, 7,  1, 0),
+(2208, 'discount:coupon:delete',     '删除券',       2, 7, 8,  1, 0),
+(2209, 'discount:coupon:issue',      '发券',         2, 7, 9,  1, 0),
+(2210, 'discount:coupon:revoke',     '回收券',       2, 7, 10, 1, 0),
+(2211, 'discount:rule:list',         '折扣规则列表', 2, 7, 11, 1, 0),
+(2212, 'discount:rule:add',          '新增折扣规则', 2, 7, 12, 1, 0),
+(2213, 'discount:rule:edit',         '修改折扣规则', 2, 7, 13, 1, 0),
+(2214, 'discount:rule:delete',       '删除折扣规则', 2, 7, 14, 1, 0)
+ON DUPLICATE KEY UPDATE
+    permission_name = VALUES(permission_name),
+    parent_id = VALUES(parent_id),
+    sort = VALUES(sort);
+```
+
+**给 SUPER_ADMIN 分配：**
+
+```
+INSERT IGNORE INTO sys_role_permission (id, role_id, permission_id) 
+SELECT (SELECT MAX(id) FROM sys_role_permission) + ROW_NUMBER() OVER (ORDER BY permission_id), 1, permission_id
+FROM sys_permission
+WHERE permission_code LIKE 'store:%' 
+   OR permission_code LIKE 'pay:%' 
+   OR permission_code LIKE 'discount:%';
+```
+
+## 10.13 权限编码命名规范总结
+
+| 规范          | 示例                                        |
+| :------------ | :------------------------------------------ |
+| 模块前缀      | `store:`、`product:`、`order:`              |
+| 资源 + 操作   | `store:add`、`product:edit`                 |
+| 子资源 + 操作 | `store:region:add`、`discount:coupon:issue` |
+| 全小写        | ✅ `store:list`                              |
+| 驼峰或大写    | ❌ `store:List`、`Store:list`                |
+| 分隔符用冒号  | ✅ `store:region:list`                       |
+
+**`@PreAuthorize` 里用的字符串必须和数据库 `permission_code` 完全一致。**
+
 
 ---
 

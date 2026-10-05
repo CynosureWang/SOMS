@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 public class OrderItemDTO {
     @NotNull(message = "商品ID不能为空")
     private Long productId;
+    private Integer barcodeType = 1;
     private String barcode;
     private Long scaleLabelId;
     @NotNull(message = "数量不能为空")

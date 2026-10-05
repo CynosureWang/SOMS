@@ -6,6 +6,8 @@ import com.mfnit.common.api.result.ResultGenerator;
 import com.mfnit.common.core.exception.BusinessException;
 import com.mfnit.common.core.exception.ForbiddenException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +20,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @CreateTime 2026/10/3 00:18
  * @Description SOMS 全局异常处理器
  * @Copyright Copyright © 2026 Zaozhuang Memorial Future Network Information Technology Co., Ltd. All rights reserved
+ */
+/**
+ * @Project SOMS
+ * @Description SOMS 全局异常处理器
  */
 @Slf4j
 @RestControllerAdvice

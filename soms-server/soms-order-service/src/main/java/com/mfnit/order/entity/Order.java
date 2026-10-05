@@ -37,6 +37,8 @@ public class Order implements Serializable {
     private Long customerId;
     private Integer orderType;
 
+    private Long couponId;
+
     private BigDecimal totalAmount;
     private BigDecimal discountAmount;
     private BigDecimal payAmount;
