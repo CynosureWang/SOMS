@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mfnit.customer.mapper.CustomerMapper">
+
+    <!-- 通用结果映射 -->
+    <resultMap id="BaseResultMap" type="com.mfnit.customer.entity.Customer">
+        <id column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="mobile" property="mobile"/>
+        <result column="customer_level" property="customerLevel"/>
+        <result column="total_consume" property="totalConsume"/>
+        <result column="balance" property="balance"/>
+        <result column="gmt_create" property="gmtCreate"/>
+        <result column="gmt_modified" property="gmtModified"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <!-- 通用查询列 -->
+    <sql id="Base_Column_List">
+        customer_id, customer_name, mobile, customer_level,
+        total_consume, balance, gmt_create, gmt_modified, is_deleted
+    </sql>
+
+    <!-- 新增客户 -->
+    <insert id="insertCustomer" parameterType="com.mfnit.customer.entity.Customer"
+            useGeneratedKeys="true" keyProperty="customerId">
+        INSERT INTO customer (customer_name, mobile, customer_level, total_consume, balance)
+        VALUES (#{customerName}, #{mobile}, #{customerLevel}, #{totalConsume}, #{balance})
+    </insert>
+
+    <!-- 根据ID逻辑删除客户 -->
+    <update id="deleteCustomerById">
+        UPDATE customer
+        SET is_deleted = 1, gmt_modified = NOW()
+        WHERE customer_id = #{customerId} AND is_deleted = 0
+    </update>
+
+    <!-- 根据ID更新客户信息 -->
+    <update id="updateCustomerById" parameterType="com.mfnit.customer.entity.Customer">
+        UPDATE customer
+        <set>
+            <if test="customerName != null and customerName != ''">
+                customer_name = #{customerName},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile = #{mobile},
+            </if>
+            <if test="customerLevel != null">
+                customer_level = #{customerLevel},
+            </if>
+            <if test="totalConsume != null">
+                total_consume = #{totalConsume},
+            </if>
+            <if test="balance != null">
+                balance = #{balance},
+            </if>
+            gmt_modified = NOW()
+        </set>
+        WHERE customer_id = #{customerId} AND is_deleted = 0
+    </update>
+
+    <!-- 根据ID查询客户 -->
+    <select id="selectCustomerById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE customer_id = #{customerId} AND is_deleted = 0
+    </select>
+
+    <!-- 根据手机号查询客户 -->
+    <select id="selectCustomerByMobile" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE mobile = #{mobile} AND is_deleted = 0
+    </select>
+
+    <!-- 分页查询客户列表（支持按姓名、手机号模糊搜索） -->
+    <select id="selectCustomerPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE is_deleted = 0
+        <if test="customerName != null and customerName != ''">
+            AND customer_name LIKE CONCAT('%', #{customerName}, '%')
+        </if>
+        <if test="mobile != null and mobile != ''">
+            AND mobile LIKE CONCAT('%', #{mobile}, '%')
+        </if>
+        ORDER BY gmt_create DESC
+    </select>
+
+    <!-- 统计客户总数（配合分页使用） -->
+    <select id="countCustomer" resultType="long">
+        SELECT COUNT(*)
+        FROM customer
+        WHERE is_deleted = 0
+        <if test="customerName != null and customerName != ''">
+            AND customer_name LIKE CONCAT('%', #{customerName}, '%')
+        </if>
+        <if test="mobile != null and mobile != ''">
+            AND mobile LIKE CONCAT('%', #{mobile}, '%')
+        </if>
+    </select>
+
+</mapper>

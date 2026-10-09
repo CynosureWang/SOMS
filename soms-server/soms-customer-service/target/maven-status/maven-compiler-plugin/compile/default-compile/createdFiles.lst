@@ -1,0 +1,16 @@
+com\mfnit\customer\service\CustomerAccountService.class
+com\mfnit\customer\mapper\CustomerBalanceLogMapper.class
+com\mfnit\customer\service\impl\CustomerAccountServiceImpl.class
+com\mfnit\customer\vo\AccountVO.class
+com\mfnit\customer\dto\CustomerCreateDTO.class
+com\mfnit\customer\dto\CustomerUpdateDTO.class
+com\mfnit\customer\entity\CustomerPointsLog.class
+com\mfnit\customer\vo\CustomerVO.class
+com\mfnit\customer\vo\PointsLogVO.class
+com\mfnit\customer\entity\CustomerBalanceLog.class
+com\mfnit\customer\dto\CustomerQueryDTO.class
+com\mfnit\customer\controller\CustomerAccountController.class
+com\mfnit\customer\controller\CustomerInternalController.class
+com\mfnit\customer\dto\RechargeDTO.class
+com\mfnit\customer\mapper\CustomerPointsLogMapper.class
+com\mfnit\customer\vo\BalanceLogVO.class

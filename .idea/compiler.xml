@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="soms-common" />
+        <module name="soms-discount-calculation-service" />
+        <module name="soms-customer-service" />
+        <module name="soms-pay-service" />
+        <module name="soms-stock-service" />
+        <module name="soms-product-service" />
+        <module name="soms-admin-service" />
+        <module name="soms-store-service" />
+        <module name="soms-self-checkout-service" />
+        <module name="soms-finance-service" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="soms-auth-service" target="17" />
+      <module name="soms-gateway" target="17" />
+      <module name="soms-order-service" target="17" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="soms-admin-service" options="-parameters" />
+      <module name="soms-auth-service" options="-parameters" />
+      <module name="soms-common" options="-parameters" />
+      <module name="soms-customer-service" options="-parameters" />
+      <module name="soms-discount-calculation-service" options="-parameters" />
+      <module name="soms-finance-service" options="-parameters" />
+      <module name="soms-gateway" options="-parameters" />
+      <module name="soms-order-service" options="-parameters" />
+      <module name="soms-pay-service" options="-parameters" />
+      <module name="soms-product-service" options="-parameters" />
+      <module name="soms-self-checkout-service" options="-parameters" />
+      <module name="soms-stock-service" options="-parameters" />
+      <module name="soms-store-service" options="-parameters" />
+    </option>
+  </component>
+</project>
