@@ -30,7 +30,6 @@ public class SysRole implements Serializable {
 
     @TableId(value = "role_id", type = IdType.ASSIGN_ID)
     private Long roleId;
-
     private String roleCode;
     private String roleName;
     private Integer userType;

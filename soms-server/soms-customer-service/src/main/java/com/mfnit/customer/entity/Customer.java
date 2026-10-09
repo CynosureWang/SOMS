@@ -1,10 +1,15 @@
 package com.mfnit.customer.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import jakarta.validation.constraints.*;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,12 +21,13 @@ import java.time.LocalDateTime;
  * @Author Lris
  * @Version 1.0.0
  * @CreateTime 2026/9/16
- * @Description 客户实体类
+ * @Description 客户实体类（数据库表映射，接口出入参请使用 dto / vo）
  * @Copyright Copyright © 2026 Zaozhuang Memorial Future Network Information Technology Co., Ltd. All rights reserved
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Accessors(chain = true)
 @TableName("customer")
 public class Customer implements Serializable {
 
@@ -37,22 +43,16 @@ public class Customer implements Serializable {
     /**
      * 会员姓名
      */
-    @NotBlank(message = "会员姓名不能为空")
-    @Size(max = 64, message = "会员姓名长度不能超过64个字符")
     private String customerName;
 
     /**
      * 手机号
      */
-    @NotBlank(message = "手机号不能为空")
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     private String mobile;
 
     /**
      * 会员等级：1普通会员，2银卡，3金卡
      */
-    @Min(value = 1, message = "会员等级最小为1")
-    @Max(value = 3, message = "会员等级最大为3")
     private Integer customerLevel;
 
     /**
@@ -64,6 +64,16 @@ public class Customer implements Serializable {
      * 账户余额
      */
     private BigDecimal balance;
+
+    /**
+     * 积分余额
+     */
+    private Integer points;
+
+    /**
+     * 状态：0禁用，1正常
+     */
+    private Integer status;
 
     /**
      * 创建时间
@@ -82,5 +92,4 @@ public class Customer implements Serializable {
      */
     @TableLogic(value = "0", delval = "1")
     private Integer isDeleted;
-
 }

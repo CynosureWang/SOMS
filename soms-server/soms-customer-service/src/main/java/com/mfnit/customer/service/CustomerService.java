@@ -1,8 +1,15 @@
 package com.mfnit.customer.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mfnit.common.api.dto.customer.CustomerDTO;
+import com.mfnit.common.api.result.PageResult;
+import com.mfnit.customer.dto.CustomerCreateDTO;
+import com.mfnit.customer.dto.CustomerQueryDTO;
+import com.mfnit.customer.dto.CustomerUpdateDTO;
 import com.mfnit.customer.entity.Customer;
+import com.mfnit.customer.vo.CustomerVO;
+
+import java.util.List;
 
 /**
  * @Project SOMS
@@ -16,48 +23,51 @@ public interface CustomerService extends IService<Customer> {
 
     /**
      * 新增客户
-     * @param customer 客户信息
+     * @param dto 新增客户请求
      * @return 新增后的客户信息（包含生成的ID）
      */
-    Customer addCustomer(Customer customer);
+    CustomerVO addCustomer(CustomerCreateDTO dto);
 
     /**
      * 根据ID删除客户（逻辑删除）
      * @param customerId 会员ID
      * @return 被删除的客户信息
      */
-    Customer deleteCustomer(Long customerId);
+    CustomerVO deleteCustomer(Long customerId);
 
     /**
      * 修改客户信息
-     * @param customer 客户信息
+     * @param dto 修改客户请求
      * @return 更新后的客户信息
      */
-    Customer updateCustomer(Customer customer);
+    CustomerVO updateCustomer(CustomerUpdateDTO dto);
 
     /**
      * 根据ID查询客户
      * @param customerId 会员ID
      * @return 客户信息
      */
-    Customer getCustomerById(Long customerId);
+    CustomerVO getCustomerById(Long customerId);
 
     /**
      * 根据手机号查询客户
      * @param mobile 手机号
      * @return 客户信息
      */
-    Customer getCustomerByMobile(String mobile);
+    CustomerVO getCustomerByMobile(String mobile);
 
     /**
      * 分页查询客户列表
-     * @param pageNum      页码
-     * @param pageSize     每页数量
-     * @param customerName 会员姓名（模糊）
-     * @param mobile       手机号（模糊）
+     * @param dto 分页查询条件
      * @return 分页结果
      */
-    IPage<Customer> getCustomerPage(Integer pageNum, Integer pageSize,
-                                    String customerName, String mobile);
+    PageResult<CustomerVO> getCustomerPage(CustomerQueryDTO dto);
+
+    /**
+     * 批量查询会员（内部接口，供 order/self-checkout 等服务调用）
+     * @param customerIds 会员ID集合
+     * @return 会员DTO列表
+     */
+    List<CustomerDTO> listCustomerDTOs(List<Long> customerIds);
 
 }

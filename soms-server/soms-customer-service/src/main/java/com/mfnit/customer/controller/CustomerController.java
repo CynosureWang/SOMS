@@ -1,14 +1,24 @@
 package com.mfnit.customer.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.api.result.ResultGenerator;
-import com.mfnit.customer.entity.Customer;
+import com.mfnit.customer.dto.CustomerCreateDTO;
+import com.mfnit.customer.dto.CustomerQueryDTO;
+import com.mfnit.customer.dto.CustomerUpdateDTO;
 import com.mfnit.customer.service.CustomerService;
+import com.mfnit.customer.vo.CustomerVO;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @Project SOMS
@@ -28,12 +38,12 @@ public class CustomerController {
 
     /**
      * 新增客户
-     * @param customer 客户信息
+     * @param dto 新增客户请求
      * @return 新增后的客户信息
      */
     @PostMapping
-    public Result addCustomer(@Valid @RequestBody Customer customer) {
-        Customer saved = customerService.addCustomer(customer);
+    public Result<CustomerVO> addCustomer(@Valid @RequestBody CustomerCreateDTO dto) {
+        CustomerVO saved = customerService.addCustomer(dto);
         return ResultGenerator.genSuccessMsgDataResult("新增客户成功", saved);
     }
 
@@ -43,19 +53,19 @@ public class CustomerController {
      * @return 被删除的客户信息
      */
     @DeleteMapping("/{customerId}")
-    public Result deleteCustomer(@PathVariable Long customerId) {
-        Customer deleted = customerService.deleteCustomer(customerId);
+    public Result<CustomerVO> deleteCustomer(@PathVariable Long customerId) {
+        CustomerVO deleted = customerService.deleteCustomer(customerId);
         return ResultGenerator.genSuccessMsgDataResult("删除客户成功", deleted);
     }
 
     /**
      * 修改客户信息
-     * @param customer 客户信息
+     * @param dto 修改客户请求
      * @return 更新后的客户信息
      */
     @PutMapping
-    public Result updateCustomer(@Valid @RequestBody Customer customer) {
-        Customer updated = customerService.updateCustomer(customer);
+    public Result<CustomerVO> updateCustomer(@Valid @RequestBody CustomerUpdateDTO dto) {
+        CustomerVO updated = customerService.updateCustomer(dto);
         return ResultGenerator.genSuccessMsgDataResult("修改客户信息成功", updated);
     }
 
@@ -65,8 +75,8 @@ public class CustomerController {
      * @return 客户信息
      */
     @GetMapping("/{customerId}")
-    public Result getCustomerById(@PathVariable Long customerId) {
-        Customer customer = customerService.getCustomerById(customerId);
+    public Result<CustomerVO> getCustomerById(@PathVariable Long customerId) {
+        CustomerVO customer = customerService.getCustomerById(customerId);
         return ResultGenerator.genSuccessResult(customer);
     }
 
@@ -76,28 +86,19 @@ public class CustomerController {
      * @return 客户信息
      */
     @GetMapping("/mobile/{mobile}")
-    public Result getCustomerByMobile(@PathVariable String mobile) {
-        Customer customer = customerService.getCustomerByMobile(mobile);
+    public Result<CustomerVO> getCustomerByMobile(@PathVariable String mobile) {
+        CustomerVO customer = customerService.getCustomerByMobile(mobile);
         return ResultGenerator.genSuccessResult(customer);
     }
 
     /**
      * 分页查询客户列表（支持按姓名、手机号模糊搜索）
-     * @param pageNum  页码
-     * @param pageSize 每页数量
-     * @param customerName 会员姓名（模糊）
-     * @param mobile   手机号（模糊）
+     * @param dto 分页查询条件
      * @return 分页结果
      */
     @GetMapping("/list")
-    public Result getCustomerList(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) String mobile) {
-
-        IPage<Customer> page = customerService.getCustomerPage(pageNum, pageSize, customerName, mobile);
-        return ResultGenerator.genSuccessResult(page);
+    public Result<PageResult<CustomerVO>> getCustomerList(CustomerQueryDTO dto) {
+        return ResultGenerator.genSuccessResult(customerService.getCustomerPage(dto));
     }
 
 }

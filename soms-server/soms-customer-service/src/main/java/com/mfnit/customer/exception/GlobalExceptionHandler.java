@@ -3,6 +3,7 @@ package com.mfnit.customer.exception;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.api.result.ResultCodeMessage;
 import com.mfnit.common.api.result.ResultGenerator;
+import com.mfnit.common.core.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
