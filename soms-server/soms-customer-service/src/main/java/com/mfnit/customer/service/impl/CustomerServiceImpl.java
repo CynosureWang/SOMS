@@ -3,6 +3,7 @@ package com.mfnit.customer.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mfnit.common.api.dto.customer.CustomerDTO;
 import com.mfnit.common.api.result.ResultCodeMessage;
 import com.mfnit.customer.entity.Customer;
 import com.mfnit.customer.exception.BusinessException;
@@ -11,6 +12,8 @@ import com.mfnit.customer.service.CustomerService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @Project SOMS
@@ -40,6 +43,12 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         }
         if (customer.getBalance() == null) {
             customer.setBalance(BigDecimal.ZERO);
+        }
+        if (customer.getPoints() == null) {
+            customer.setPoints(0);
+        }
+        if (customer.getStatus() == null) {
+            customer.setStatus(1);
         }
         baseMapper.insertCustomer(customer);
         return customer;
@@ -103,6 +112,21 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
                                            String customerName, String mobile) {
         Page<Customer> page = new Page<>(pageNum, pageSize);
         return baseMapper.selectCustomerPage(page, customerName, mobile);
+    }
+
+    @Override
+    public List<CustomerDTO> listCustomersByIds(List<Long> customerIds) {
+        if (customerIds == null || customerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Customer> customers = baseMapper.selectBatchIds(customerIds);
+        return customers.stream()
+                .map(c -> new CustomerDTO()
+                        .setCustomerId(c.getCustomerId())
+                        .setCustomerName(c.getCustomerName())
+                        .setMobile(c.getMobile())
+                        .setCustomerLevel(c.getCustomerLevel()))
+                .toList();
     }
 
 }
