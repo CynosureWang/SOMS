@@ -66,6 +66,16 @@ public class Customer implements Serializable {
     private BigDecimal balance;
 
     /**
+     * 积分余额
+     */
+    private Integer points;
+
+    /**
+     * 状态：0禁用，1正常
+     */
+    private Integer status;
+
+    /**
      * 创建时间
      */
     @TableField(fill = FieldFill.INSERT)

@@ -49,6 +49,7 @@ public class CustomerAccountServiceImpl implements CustomerAccountService {
     /** 余额变动类型 */
     private static final int CHANGE_TYPE_RECHARGE = 1;
     private static final int CHANGE_TYPE_CONSUME = 2;
+    private static final int CHANGE_TYPE_REFUND = 3;
 
     /** 积分变动类型 */
     private static final int POINTS_TYPE_CONSUME = 1;
@@ -114,6 +115,35 @@ public class CustomerAccountServiceImpl implements CustomerAccountService {
                 .setChangeAmount(amount.negate())
                 .setBalanceBefore(before)
                 .setBalanceAfter(before.subtract(amount))
+                .setBizType(dto.getBizType())
+                .setBizId(dto.getBizId())
+                .setRemark(dto.getRemark()));
+        return getAccount(dto.getCustomerId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AccountVO refundBalance(BalanceDeductDTO dto) {
+        // 退款属于资金退回，禁用会员也应能接收，故只校验存在性、不校验启用状态
+        Customer customer = requireCustomer(dto.getCustomerId());
+        // 幂等：同一业务单号已退回过则直接返回当前账户
+        Long exists = balanceLogMapper.selectCount(new LambdaQueryWrapper<CustomerBalanceLog>()
+                .eq(CustomerBalanceLog::getBizType, dto.getBizType())
+                .eq(CustomerBalanceLog::getBizId, dto.getBizId()));
+        if (exists > 0) {
+            return getAccount(dto.getCustomerId());
+        }
+        BigDecimal before = customer.getBalance() == null ? BigDecimal.ZERO : customer.getBalance();
+        BigDecimal amount = dto.getAmount();
+        customerMapper.update(null, new LambdaUpdateWrapper<Customer>()
+                .setSql("balance = balance + {0}", amount)
+                .eq(Customer::getCustomerId, dto.getCustomerId()));
+        balanceLogMapper.insert(new CustomerBalanceLog()
+                .setCustomerId(dto.getCustomerId())
+                .setChangeType(CHANGE_TYPE_REFUND)
+                .setChangeAmount(amount)
+                .setBalanceBefore(before)
+                .setBalanceAfter(before.add(amount))
                 .setBizType(dto.getBizType())
                 .setBizId(dto.getBizId())
                 .setRemark(dto.getRemark()));

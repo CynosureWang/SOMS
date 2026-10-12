@@ -34,6 +34,13 @@ public interface CustomerAccountService {
     AccountVO deductBalance(BalanceDeductDTO dto);
 
     /**
+     * 余额退款（内部接口，幂等）：退款原路退回会员余额，流水变动类型为 3-退款
+     * @param dto 退款请求（复用扣减契约，amount 为退回金额）
+     * @return 退款后账户概览
+     */
+    AccountVO refundBalance(BalanceDeductDTO dto);
+
+    /**
      * 消费完成回调（内部接口，幂等）：累加累计消费、赠送积分、重算会员等级
      * @param dto 消费回调请求
      * @return 回调后账户概览

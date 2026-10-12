@@ -1,13 +1,40 @@
+server:
+  port: 8020
+
 spring:
   application:
-    name: service-discount-calculation
+    name: service-discount
+  profiles:
+    active: dev
+  config:
+    import:
+      - optional:nacos:soms-common.yml
+      - optional:nacos:soms-redis.yml
+      - optional:nacos:service-discount.yml
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
         namespace: soms
       config:
-        import-check:
-          enabled: false
-server:
-  port: 8020
+        server-addr: 127.0.0.1:8848
+        namespace: soms
+        file-extension: yml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: soms-common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+          - data-id: soms-redis.yml
+            group: DEFAULT_GROUP
+            refresh: true
+        extension-configs:
+          - data-id: service-discount.yml
+            group: DEFAULT_GROUP
+            refresh: true
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 5000ms

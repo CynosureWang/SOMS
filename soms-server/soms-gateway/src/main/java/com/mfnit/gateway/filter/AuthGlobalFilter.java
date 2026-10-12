@@ -51,10 +51,20 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
+    /** 内部契约接口路径模式：仅供服务间 Feign 直连调用，网关一律拒绝外部访问 */
+    private static final String INTERNAL_PATH_PATTERN = "/**/internal/**";
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getURI().getPath();
+
+        // 内部接口优先拦截（先于白名单），防止通过网关从外部直达 /internal 契约
+        if (PATH_MATCHER.match(INTERNAL_PATH_PATTERN, path)) {
+            log.warn("拦截内部接口外部访问：path={}, remote={}",
+                    path, request.getRemoteAddress());
+            return forbidden(exchange);
+        }
 
         if (isWhitelist(path)) {
             return chain.filter(exchange);
@@ -123,6 +133,17 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         String body = "{\"code\":401,\"message\":\"" + msg + "\",\"data\":null}";
+        DataBuffer buffer = response.bufferFactory()
+                .wrap(body.getBytes(StandardCharsets.UTF_8));
+        return response.writeWith(Mono.just(buffer));
+    }
+
+    /** 内部接口禁止外部访问，统一返回 403 */
+    private Mono<Void> forbidden(ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.FORBIDDEN);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        String body = "{\"code\":403,\"message\":\"内部接口，禁止外部访问\",\"data\":null}";
         DataBuffer buffer = response.bufferFactory()
                 .wrap(body.getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(buffer));

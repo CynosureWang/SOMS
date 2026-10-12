@@ -57,6 +57,17 @@ public class CustomerInternalController {
     }
 
     /**
+     * 余额退款（幂等）：退款原路退回会员余额
+     * @param dto 退款请求（amount 为退回金额）
+     * @return 退款后账户概览
+     */
+    @PostMapping("/balance/refund")
+    public Result<AccountVO> refundBalance(@Valid @RequestBody BalanceDeductDTO dto) {
+        AccountVO account = customerAccountService.refundBalance(dto);
+        return ResultGenerator.genSuccessMsgDataResult("退款成功", account);
+    }
+
+    /**
      * 消费完成回调（幂等）：累加累计消费、赠送积分、重算会员等级
      * @param dto 消费回调请求
      * @return 回调后账户概览

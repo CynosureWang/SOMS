@@ -11,6 +11,8 @@
         <result column="customer_level" property="customerLevel"/>
         <result column="total_consume" property="totalConsume"/>
         <result column="balance" property="balance"/>
+        <result column="points" property="points"/>
+        <result column="status" property="status"/>
         <result column="gmt_create" property="gmtCreate"/>
         <result column="gmt_modified" property="gmtModified"/>
         <result column="is_deleted" property="isDeleted"/>
@@ -19,14 +21,15 @@
     <!-- 通用查询列 -->
     <sql id="Base_Column_List">
         customer_id, customer_name, mobile, customer_level,
-        total_consume, balance, gmt_create, gmt_modified, is_deleted
+        total_consume, balance, points, status,
+        gmt_create, gmt_modified, is_deleted
     </sql>
 
     <!-- 新增客户 -->
     <insert id="insertCustomer" parameterType="com.mfnit.customer.entity.Customer"
             useGeneratedKeys="true" keyProperty="customerId">
-        INSERT INTO customer (customer_name, mobile, customer_level, total_consume, balance)
-        VALUES (#{customerName}, #{mobile}, #{customerLevel}, #{totalConsume}, #{balance})
+        INSERT INTO customer (customer_name, mobile, customer_level, total_consume, balance, points, status)
+        VALUES (#{customerName}, #{mobile}, #{customerLevel}, #{totalConsume}, #{balance}, #{points}, #{status})
     </insert>
 
     <!-- 根据ID逻辑删除客户 -->

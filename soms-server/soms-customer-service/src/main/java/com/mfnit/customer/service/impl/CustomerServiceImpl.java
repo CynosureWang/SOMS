@@ -3,14 +3,17 @@ package com.mfnit.customer.service.impl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.mfnit.common.api.dto.customer.CustomerDTO;
 import com.mfnit.common.api.result.ResultCodeMessage;
+import com.mfnit.common.core.exception.BusinessException;
 import com.mfnit.customer.entity.Customer;
-import com.mfnit.customer.exception.BusinessException;
 import com.mfnit.customer.mapper.CustomerMapper;
 import com.mfnit.customer.service.CustomerService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @Project SOMS
@@ -40,6 +43,12 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
         }
         if (customer.getBalance() == null) {
             customer.setBalance(BigDecimal.ZERO);
+        }
+        if (customer.getPoints() == null) {
+            customer.setPoints(0);
+        }
+        if (customer.getStatus() == null) {
+            customer.setStatus(1);
         }
         baseMapper.insertCustomer(customer);
         return customer;
@@ -103,6 +112,29 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
                                            String customerName, String mobile) {
         Page<Customer> page = new Page<>(pageNum, pageSize);
         return baseMapper.selectCustomerPage(page, customerName, mobile);
+    }
+
+    /**
+     * 批量查询客户简要信息（供内部服务 Feign 调用）
+     * <p>只返回 DTO 中的必要字段（ID/姓名/手机号/会员等级），避免客户完整实体（余额、积分等）外泄给调用方
+     *
+     * @param customerIds 客户 ID 列表，允许为 null 或空
+     * @return 客户 DTO 列表；传入为空时返回空列表，不存在的 ID 会被静默跳过
+     */
+    @Override
+    public List<CustomerDTO> listCustomerDTOs(List<Long> customerIds) {
+        // 空入参直接返回空列表，避免 selectBatchIds 拼出非法 IN () 条件
+        if (customerIds == null || customerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        // 批量查询后转换为 DTO，仅映射对外暴露的四个字段
+        return baseMapper.selectBatchIds(customerIds).stream()
+                .map(customer -> new CustomerDTO()
+                        .setCustomerId(customer.getCustomerId())
+                        .setCustomerName(customer.getCustomerName())
+                        .setMobile(customer.getMobile())
+                        .setCustomerLevel(customer.getCustomerLevel()))
+                .toList();
     }
 
 }

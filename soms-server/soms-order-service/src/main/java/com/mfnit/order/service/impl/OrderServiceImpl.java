@@ -3,9 +3,11 @@ package com.mfnit.order.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mfnit.common.api.dto.customer.ConsumeCompleteDTO;
 import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.core.exception.BusinessException;
+import com.mfnit.order.client.CustomerFeignClient;
 import com.mfnit.order.client.DiscountFeignClient;
 import com.mfnit.order.client.ProductFeignClient;
 import com.mfnit.order.client.StockFeignClient;
@@ -69,6 +71,7 @@ public class OrderServiceImpl implements OrderService {
     private final StockFeignClient stockFeignClient;
     private final DiscountFeignClient discountFeignClient;
     private final StoreFeignClient storeFeignClient;
+    private final CustomerFeignClient customerFeignClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -376,9 +379,35 @@ public class OrderServiceImpl implements OrderService {
         writeStatusLog(order.getOrderId(), order.getOrderNo(), fromStatus,
                 OrderStatus.PAID.getCode(), null, 2, "支付成功");
 
+        // 4. 会员消费回调（累计消费/返积分/升级），尽力而为：失败不影响支付主流程，可后续对账补偿
+        notifyConsumeComplete(order);
+
         if (order.getOrderType() == OrderType.POS.getCode()
                 || order.getOrderType() == OrderType.SELF_CHECKOUT.getCode()) {
             finishOrderInternal(order);
+        }
+    }
+
+    /**
+     * 支付成功后通知 customer 服务累计消费（幂等键 orderNo），
+     * 回调失败仅记日志，不回滚支付状态（积分可人工补发）
+     */
+    private void notifyConsumeComplete(Order order) {
+        if (order.getCustomerId() == null) {
+            return; // 非会员订单不回调
+        }
+        try {
+            ConsumeCompleteDTO dto = new ConsumeCompleteDTO();
+            dto.setCustomerId(order.getCustomerId());
+            dto.setConsumeAmount(order.getPayAmount());
+            dto.setBizType("ORDER");
+            dto.setBizId(order.getOrderNo());
+            Result<?> result = customerFeignClient.completeConsume(dto);
+            if (result.getCode() != 0) {
+                log.error("消费回调失败：orderNo={}, msg={}", order.getOrderNo(), result.getMessage());
+            }
+        } catch (Exception e) {
+            log.error("消费回调异常：orderNo={}", order.getOrderNo(), e);
         }
     }
 

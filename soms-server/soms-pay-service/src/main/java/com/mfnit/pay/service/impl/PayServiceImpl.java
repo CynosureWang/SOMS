@@ -2,9 +2,11 @@ package com.mfnit.pay.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.mfnit.common.api.dto.customer.BalanceDeductDTO;
 import com.mfnit.common.api.result.PageResult;
 import com.mfnit.common.api.result.Result;
 import com.mfnit.common.core.exception.BusinessException;
+import com.mfnit.pay.client.CustomerFeignClient;
 import com.mfnit.pay.client.OrderFeignClient;
 import com.mfnit.pay.client.dto.OrderPaySuccessDTO;
 import com.mfnit.pay.constant.*;
@@ -49,6 +51,7 @@ public class PayServiceImpl implements PayService {
     private final PayRefundMapper payRefundMapper;
     private final PayNoGenerator payNoGenerator;
     private final OrderFeignClient orderFeignClient;
+    private final CustomerFeignClient customerFeignClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -70,10 +73,17 @@ public class PayServiceImpl implements PayService {
 
         writeFlow(pay, PayFlowType.CREATE, null, null, "创建支付单");
 
-        // 现金 / 会员余额：直接成功
-        if (dto.getPayType() == PayType.CASH.getCode()
-                || dto.getPayType() == PayType.MEMBER_BALANCE.getCode()) {
-            //TODO 调用扣减会员余额/现金账户接口，调soms-customer-service取balance后，判断余额是否充足，现用模拟
+        // 现金：线下收银收取，直接成功；会员余额：先真实扣减再成功
+        if (dto.getPayType() == PayType.CASH.getCode()) {
+            doPaySuccess(pay, dto.getPayAmount());
+            return buildResult(pay, null, null);
+        }
+        if (dto.getPayType() == PayType.MEMBER_BALANCE.getCode()) {
+            if (pay.getCustomerId() == null) {
+                throw new BusinessException("余额支付必须指定会员ID");
+            }
+            // 调 customer 内部接口扣减余额（幂等键 payNo），余额不足/账号禁用时失败，事务回滚
+            deductMemberBalance(pay, dto.getPayAmount());
             doPaySuccess(pay, dto.getPayAmount());
             return buildResult(pay, null, null);
         }
@@ -265,6 +275,11 @@ public class PayServiceImpl implements PayService {
                 .setRefundTime(LocalDateTime.now());
         payRefundMapper.updateById(refund);
 
+        // 余额支付：退款原路退回会员余额（幂等键 refundNo，失败则整体回滚）
+        if (pay.getPayType() == PayType.MEMBER_BALANCE.getCode() && pay.getCustomerId() != null) {
+            refundMemberBalance(pay, dto.getRefundAmount(), refund.getRefundNo());
+        }
+
         // 更新支付单状态
         if (dto.getRefundAmount().compareTo(pay.getPaidAmount()) == 0) {
             pay.setStatus(PayStatus.REFUNDED.getCode());
@@ -332,6 +347,46 @@ public class PayServiceImpl implements PayService {
         } catch (Exception e) {
             log.error("通知订单异常：payNo={}", pay.getPayNo(), e);
             throw new BusinessException("通知订单异常：" + e.getMessage());
+        }
+    }
+
+    /** 余额支付：调 customer 服务扣减会员余额（幂等，业务单号=payNo） */
+    private void deductMemberBalance(PayOrder pay, BigDecimal amount) {
+        BalanceDeductDTO deductDTO = new BalanceDeductDTO();
+        deductDTO.setCustomerId(pay.getCustomerId());
+        deductDTO.setAmount(amount);
+        deductDTO.setBizType("PAY");
+        deductDTO.setBizId(pay.getPayNo());
+        deductDTO.setRemark("订单余额支付：" + pay.getOrderNo());
+        Result<?> result;
+        try {
+            result = customerFeignClient.deductBalance(deductDTO);
+        } catch (Exception e) {
+            log.error("调会员余额扣减异常：payNo={}", pay.getPayNo(), e);
+            throw new BusinessException("余额扣减失败：会员服务不可用");
+        }
+        if (result.getCode() != 0) {
+            throw new BusinessException("余额扣减失败：" + result.getMessage());
+        }
+    }
+
+    /** 余额退款：调 customer 服务原路退回会员余额（幂等，业务单号=refundNo） */
+    private void refundMemberBalance(PayOrder pay, BigDecimal amount, String refundNo) {
+        BalanceDeductDTO refundDTO = new BalanceDeductDTO();
+        refundDTO.setCustomerId(pay.getCustomerId());
+        refundDTO.setAmount(amount);
+        refundDTO.setBizType("REFUND");
+        refundDTO.setBizId(refundNo);
+        refundDTO.setRemark("支付退款退回余额：" + pay.getOrderNo());
+        Result<?> result;
+        try {
+            result = customerFeignClient.refundBalance(refundDTO);
+        } catch (Exception e) {
+            log.error("调会员余额退款异常：refundNo={}", refundNo, e);
+            throw new BusinessException("余额退款失败：会员服务不可用");
+        }
+        if (result.getCode() != 0) {
+            throw new BusinessException("余额退款失败：" + result.getMessage());
         }
     }
 

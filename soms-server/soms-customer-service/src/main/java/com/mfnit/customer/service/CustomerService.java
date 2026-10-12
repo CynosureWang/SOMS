@@ -2,7 +2,10 @@ package com.mfnit.customer.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mfnit.common.api.dto.customer.CustomerDTO;
 import com.mfnit.customer.entity.Customer;
+
+import java.util.List;
 
 /**
  * @Project SOMS
@@ -59,5 +62,12 @@ public interface CustomerService extends IService<Customer> {
      */
     IPage<Customer> getCustomerPage(Integer pageNum, Integer pageSize,
                                     String customerName, String mobile);
+
+    /**
+     * 批量查询会员信息（内部接口，供 order/pay 等服务经 Feign 调用）
+     * @param customerIds 会员ID集合
+     * @return 会员DTO列表
+     */
+    List<CustomerDTO> listCustomerDTOs(List<Long> customerIds);
 
 }

@@ -467,30 +467,60 @@ ALTER TABLE \\\`customer\\\`
 
 **成功响应**：返回 `CustomerAccountDTO`，`message` 为 "消费回调成功"。
 
+### 4.4 余额退款（幂等）
+
+**POST** `/api/v1/customer/internal/balance/refund`
+
+
+
+| 参数           | 类型           | 必填 | 说明             |
+| ------------ | ------------ | -- | -------------- |
+| `customerId` | `Long`       | 是  | 会员 ID          |
+| `amount`     | `BigDecimal` | 是  | 退回金额（元），必须大于 0 |
+| `bizType`    | `String`     | 是  | 业务类型，如 REFUND  |
+| `bizId`      | `String`     | 是  | 业务单号（幂等键，如退款单号） |
+| `remark`     | `String`     | 否  | 备注             |
+
+**行为说明**
+
+* 退回余额并写余额流水，变动类型为 3-退款
+
+* 同一 `bizType + bizId` 重复调用不重复退回，直接返回当前账户
+
+* 退款属于资金退回，禁用会员也可接收退款（只校验会员存在性）
+
+**成功响应**：返回 `CustomerAccountDTO`，`message` 为 "退款成功"。
+
+**调用方**：`soms-pay-service` 在余额支付退款时调用（bizType=REFUND，bizId=refundNo）。
+
 
 
 ***
 
-## 5. Feign 契约（soms-common）
+## 5. Feign 契约（调用方侧）
 
-`com.mfnit.common.api.client.CustomerFeignClient`（`path = /api/v1/customer`）本次扩展方法：
+调用方按项目惯例在各服务 `client` 包内定义 Feign 客户端，复用 `com.mfnit.common.api.dto.customer` 下的 DTO 契约：
 
 
 
-| 方法                                    | HTTP | 路径                           |
-| ------------------------------------- | ---- | ---------------------------- |
-| `batchCustomers(List<Long>)`          | GET  | `/internal/batch`            |
-| `deductBalance(BalanceDeductDTO)`     | POST | `/internal/balance/deduct`   |
-| `completeConsume(ConsumeCompleteDTO)` | POST | `/internal/consume/complete` |
+| 客户端                                       | 所属服务        | 方法                                        | HTTP | 路径                 |
+| ----------------------------------------- | ----------- | ----------------------------------------- | ---- | ------------------ |
+| `com.mfnit.pay.client.CustomerFeignClient`   | soms-pay-service | `deductBalance(BalanceDeductDTO)`         | POST | `/internal/balance/deduct`   |
+| `com.mfnit.pay.client.CustomerFeignClient`   | soms-pay-service | `refundBalance(BalanceDeductDTO)`         | POST | `/internal/balance/refund`   |
+| `com.mfnit.order.client.CustomerFeignClient` | soms-order-service | `completeConsume(ConsumeCompleteDTO)`     | POST | `/internal/consume/complete` |
 
-新增 DTO（`com.mfnit.common.api.dto.customer`）：
+> 内部接口实际调用均为服务间直连（Nacos 服务发现），不经过网关。
+>
+> **安全约束**：所有 `/internal/**` 接口由网关 `AuthGlobalFilter` 统一拦截外部访问（命中 `/**/internal/**` 返回 403），且 customer 服务侧 `GatewayAuthFilter` 对非内部路径强制校验网关签名，无法绕过网关直连服务端口调用。
+
+DTO（`com.mfnit.common.api.dto.customer`）：
 
 
 
 | DTO                  | 用途                             |
 | -------------------- | ------------------------------ |
 | `CustomerAccountDTO` | 账户信息（余额 / 积分 / 等级 / 累计消费 / 状态） |
-| `BalanceDeductDTO`   | 余额扣减请求                         |
+| `BalanceDeductDTO`   | 余额扣减 / 退款请求                    |
 | `ConsumeCompleteDTO` | 消费完成回调请求                       |
 
 
@@ -512,7 +542,7 @@ ALTER TABLE \\\`customer\\\`
 >
 > `8010`
 >
->  端口（customer 服务无鉴权，可直接调试）。
+>  端口。**注意**：customer 服务已启用网关签名校验过滤器，对外接口直连 8010 调试需携带合法签名头，正式调用请经网关（80 端口）带 Bearer token 访问；`/internal/**` 接口直连调试不受影响（服务间契约路径）。
 
 
 
